@@ -2,9 +2,9 @@
 
 <p align="center">
 
-**An intelligent AI-powered ecosystem for productivity, learning, research, development, and personal automation.**
+**One workspace for productivity, learning, research, development, and personal automation.**
 
-Bringing your digital workspace, AI assistants, and productivity tools together in one unified platform.
+Bring your AI assistants, everyday tools, and personal knowledge together in one place.
 
 </p>
 
@@ -12,122 +12,103 @@ Bringing your digital workspace, AI assistants, and productivity tools together 
 
 ## 🚀 Overview
 
-**CognifyOS** is an AI-powered personal productivity and automation platform designed to act as a centralized digital workspace.
+CognifyOS is a personal productivity platform designed to bring common activities—chatting, studying, managing tasks, taking notes, researching, and planning—into a unified workspace.
 
-Instead of switching between multiple applications for chatting, studying, managing tasks, taking notes, conducting research, and organizing projects, CognifyOS aims to bring everything into one intelligent ecosystem.
-
-The platform combines modern web technologies, AI-powered assistance, automation, and personal productivity tools to create a smarter and more organized digital experience.
+The project combines a React frontend with a planned FastAPI backend and AI services. The frontend provides the application experience; backend, database, and AI integrations are being developed progressively. Diagrams below show the intended architecture, not a claim that every integration is already implemented.
 
 ### 🎯 Vision
 
-To build a personal AI operating system that understands user needs, assists with daily activities, manages knowledge, automates repetitive workflows, and improves productivity through intelligent assistance.
+Build a personal AI workspace that helps users organize knowledge, make progress on daily work, and automate repetitive tasks—with the user remaining in control.
 
 ---
 
-## ✨ Key Features
+## ✨ Features
 
-### 1. AI Chat
-- Interactive AI-powered chat interface.
-- Ask questions and receive intelligent responses.
-- AI-assisted problem solving.
-- Conversation history.
-- Context-aware assistance.
-- Future integration with long-term conversational memory.
-
-### 2. My Tasks
-- Create and manage personal tasks.
-- Organize daily activities.
-- Track task completion.
-- Manage priorities and deadlines.
-- Improve personal productivity.
-
-### 3. Study Assistant
-- AI-powered learning assistance.
-- Understand complex concepts.
-- Generate study explanations.
-- Assist with exam preparation.
-- Support structured learning workflows.
-
-### 4. Project Assistant
-- AI-assisted project planning.
-- Organize project requirements.
-- Break projects into manageable tasks.
-- Get development guidance.
-- Support coding and problem-solving workflows.
-
-### 5. Documents
-- Centralized document workspace.
-- Organize important files.
-- Manage uploaded documents.
-- Future AI-powered document summarization and question answering.
-
-### 6. Research Assistant
-- Organize research activities.
-- Explore topics systematically.
-- Generate research summaries.
-- Future integration with external research sources and AI tools.
-
-### 7. My Notes
-- Create and organize notes.
-- Maintain personal knowledge.
-- Store important information.
-- Build a centralized knowledge workspace.
-
-### 8. Daily Planner
-- Organize daily schedules.
-- Plan activities.
-- Manage personal routines.
-- Improve time management.
-
-### 9. History
-- Access previous activities.
-- Review past conversations and interactions.
-- Maintain an organized activity timeline.
-
-### 10. Settings
-- Manage application preferences.
-- Configure personal settings.
-- Export supported application data.
-- Future account and backend configuration.
+| Area | What it is for |
+|---|---|
+| **AI Chat** | Ask questions, solve problems, and review conversations. Context-aware memory is planned. |
+| **Tasks** | Create tasks, track completion, and organize priorities and deadlines. |
+| **Study Assistant** | Explore difficult concepts and support structured learning and exam preparation. |
+| **Project Assistant** | Plan projects, break work into manageable tasks, and get development guidance. |
+| **Documents** | Organize files; AI-powered document summaries and Q&A are planned. |
+| **Research Assistant** | Structure research and summarize topics; external research integrations are planned. |
+| **Notes** | Create and organize personal knowledge. |
+| **Daily Planner** | Plan schedules, activities, and routines. |
+| **History** | Review previous activities and interactions. |
+| **Settings** | Manage application preferences and supported data exports. |
 
 ---
 
-## 🧠 AI Ecosystem Architecture
+## 🧠 System Architecture
 
-CognifyOS is designed around multiple interconnected layers.
+This diagram shows how the planned system components fit together. A request enters through the web app, reaches the API, and is routed to application services. AI and database access happen on the backend; secrets such as the Gemini API key should never be exposed in the browser.
 
-```text
-                 COGNIFYOS
-          Personal AI Ecosystem
-                      |
-          +-----------+-----------+
-          |                       |
-      FRONTEND                 BACKEND
-          |                       |
-    React + Vite              FastAPI
-          |                       |
-     User Interface          API Layer
-          |                       |
-    +-----+------+          +-----+------+
-    |     |      |          |     |      |
-   Chat  Tasks  Notes      Auth  AI     Services
-    |     |      |          |     |      |
-    +-----+------+          +-----+------+
-          |                       |
-      Dashboard              AI Engine
-                                  |
-                         +--------+--------+
-                         |        |        |
-                       Gemini   Agents    Tools
-                         |        |        |
-                         +--------+--------+
-                                  |
-                              Database
-                                  |
-                               SQLite
+```mermaid
+flowchart LR
+    person([User])
+
+    subgraph client[Client — React and Vite]
+        ui[Web app and dashboard]
+        modules[Chat · Tasks · Study · Projects<br/>Documents · Research · Notes · Planner]
+        browserState[Client state and preferences]
+        ui --> modules
+        modules <--> browserState
+    end
+
+    subgraph server[Backend — FastAPI]
+        api[REST API]
+        validation[Validation and application logic]
+        services[Feature services]
+        auth[Authentication and authorization<br/>(planned)]
+        ai[AI service and agent workflows<br/>(planned)]
+        persistence[Data access layer<br/>SQLAlchemy (planned)]
+        api --> validation
+        validation --> auth
+        validation --> services
+        services --> ai
+        services --> persistence
+    end
+
+    model[Gemini API<br/>(external AI provider)]
+    db[(SQLite<br/>(initial database plan))]
+
+    person --> ui
+    modules <-->|HTTPS / JSON| api
+    ai <-->|AI request and response| model
+    persistence <-->|Read and write| db
 ```
 
-*Architecture represents the planned system design. Individual integrations will be implemented progressively.*
+### Request lifecycle
+
+For an AI-assisted action, the intended request and response path is:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as React web app
+    participant API as FastAPI API
+    participant Service as Backend service
+    participant AI as AI provider
+    participant DB as Database
+
+    User->>UI: Submit a question or action
+    UI->>API: Send validated request over HTTPS
+    API->>Service: Validate and route request
+    opt Read or save application data
+        Service->>DB: Read/write data
+        DB-->>Service: Return result
+    end
+    opt AI is needed
+        Service->>AI: Send prompt and permitted context
+        AI-->>Service: Return model response
+    end
+    Service-->>API: Build structured result
+    API-->>UI: Return JSON response
+    UI-->>User: Render result and status
+```
+
+> **Status:** The diagrams describe the target design. Backend routes, authentication, persistence, and AI integrations should be treated as planned until implemented and tested.
 
 ---
 
@@ -137,173 +118,50 @@ CognifyOS is designed around multiple interconnected layers.
 
 | Technology | Purpose |
 |---|---|
-| React.js | Component-based UI |
-| Vite | Frontend development and build tooling |
+| React.js | Component-based user interface |
+| Vite | Development server and build tooling |
 | JavaScript | Application logic |
 | CSS3 | Styling and responsive layouts |
-| React Router | Navigation and routing |
+| React Router | Client-side navigation |
 | Lucide React | Interface icons |
-| LocalStorage | Initial client-side preferences and data |
+| LocalStorage | Initial client-side preferences/data where appropriate |
 
-### Backend
+### Backend and AI (planned architecture)
 
 | Technology | Purpose |
 |---|---|
-| Python | Backend programming |
-| FastAPI | REST API development |
+| Python and FastAPI | Backend and REST API |
 | Uvicorn | ASGI server |
-| Pydantic | Data validation |
-| SQLAlchemy | Database ORM |
-| SQLite | Initial database |
+| Pydantic | Request and response validation |
+| SQLAlchemy and SQLite | Data access and initial database |
 | Python-dotenv | Environment configuration |
-
-### Artificial Intelligence
-
-| Technology | Purpose |
-|---|---|
 | Google Gemini API | AI-powered responses |
-| LLM Integration | Intelligent language processing |
-| AI Agents | Specialized AI workflows |
-| Tool Calling | Connecting AI with application tools |
-| Conversation Memory | Context-aware interactions |
-| RAG | Future document-based question answering |
+| Agents, tools, memory, and RAG | Future specialized AI workflows |
 
 ### Development Tools
 
-- Visual Studio Code
-- Git
-- GitHub
-- Postman
-- Python Virtual Environment
-- npm
+Visual Studio Code · Git · GitHub · Postman · Python virtual environment · npm
 
 ---
 
-## ⚙️ How CognifyOS Works
+## 📂 Intended Project Structure
 
-The platform follows a layered request-processing workflow.
-
-### Step 1: User Interaction
-
-The user interacts with the React frontend through the dashboard, AI chat, study assistant, task manager, or another application module.
-
-### Step 2: Frontend Processing
-
-React manages the interface, user interactions, navigation, and client-side state.
-
-### Step 3: API Communication
-
-The frontend sends requests to the FastAPI backend using HTTP REST APIs.
-
-### Step 4: Backend Processing
-
-FastAPI receives the request, validates the input, applies business logic, and identifies the required service.
-
-### Step 5: AI Processing
-
-When an AI operation is required, the backend communicates with the configured AI model or specialized agent.
-
-### Step 6: Database Operations
-
-Application data is stored or retrieved through the database layer when required.
-
-### Step 7: Response Generation
-
-The backend returns a structured response to the frontend.
-
-### Step 8: User Experience
-
-React updates the interface and displays the result to the user.
+The structure below is the intended architecture and may differ from the current repository while development is in progress.
 
 ```text
-User
-  |
-  v
-React Frontend
-  |
-  v
-API Request
-  |
-  v
-FastAPI Backend
-  |
-  +------> Authentication
-  |
-  +------> Business Logic
-  |
-  +------> AI Services
-  |           |
-  |           v
-  |        Gemini API
-  |
-  +------> Database
-  |
-  v
-API Response
-  |
-  v
-React UI Update
-  |
-  v
-User
-```
-
----
-
-## 💡 Real-World Use Cases
-
-| Use Case | How CognifyOS Helps |
-|---|---|
-| Students | Study assistance, exam preparation, and notes |
-| Developers | Project planning, coding assistance, and problem solving |
-| Researchers | Research organization and information analysis |
-| Professionals | Task management and daily planning |
-| Content Creators | Idea organization and AI-assisted research |
-| Personal Productivity | Centralized workspace and activity management |
-| AI Enthusiasts | Experimenting with AI agents and automation |
-
-### Example Scenarios
-
-**Scenario 1 — Student Productivity**
-
-A student can use the Study Assistant to understand a difficult topic, create notes, and organize upcoming study tasks.
-
-**Scenario 2 — Software Development**
-
-A developer can use the Project Assistant to plan an application, break down development tasks, and get coding guidance.
-
-**Scenario 3 — Daily Planning**
-
-A user can organize daily activities, track tasks, and review completed work.
-
-**Scenario 4 — AI Research**
-
-A user can explore a subject, organize research notes, and use AI to assist with understanding information.
-
----
-
-## 📂 Project Structure
-
-The intended repository structure is:
-
-```text
-CognifyOS/
-│
+AetherMind/                       # GitHub repository
 ├── frontend/
 │   ├── public/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── layouts/
-│   │   ├── context/
-│   │   ├── services/
-│   │   ├── hooks/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-│
+│   └── src/
+│       ├── assets/
+│       ├── components/
+│       ├── pages/
+│       ├── layouts/
+│       ├── context/
+│       ├── services/
+│       ├── hooks/
+│       ├── App.jsx
+│       └── main.jsx
 ├── backend/
 │   ├── api/
 │   ├── agents/
@@ -313,39 +171,30 @@ CognifyOS/
 │   ├── schemas/
 │   ├── services/
 │   ├── utils/
-│   ├── __init__.py
 │   ├── main.py
 │   └── config.py
-│
-├── data/
-│   ├── documents/
-│   ├── notes/
-│   └── uploads/
-│
+├── data/                          # Local data; do not commit private user files
 ├── logs/
 ├── tests/
-│
 ├── .env.example
 ├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
 
-*The structure is the intended architecture; directory names can be adjusted to match the actual repository.*
-
 ---
 
-## 🔌 API Design
+## 🔌 Planned API Design
 
-The backend will expose REST API endpoints for individual modules.
+These are example route groups for the planned backend, not a guarantee that every endpoint exists today.
 
-| Module | Example Endpoint | Purpose |
+| Module | Example route | Purpose |
 |---|---|---|
-| Authentication | `/api/auth/` | User authentication |
-| AI Chat | `/api/chat/` | AI conversations |
+| Authentication | `/api/auth/` | Sign-in and user access |
+| AI Chat | `/api/chat/` | Conversations |
 | Tasks | `/api/tasks/` | Task management |
-| Study | `/api/study/` | Study assistance |
-| Projects | `/api/projects/` | Project management |
+| Study | `/api/study/` | Learning assistance |
+| Projects | `/api/projects/` | Project planning |
 | Documents | `/api/documents/` | Document operations |
 | Research | `/api/research/` | Research workflows |
 | Notes | `/api/notes/` | Note management |
@@ -353,104 +202,56 @@ The backend will expose REST API endpoints for individual modules.
 | History | `/api/history/` | Activity history |
 | Settings | `/api/settings/` | User preferences |
 
-*These are planned API route examples, not a claim that all endpoints are already implemented.*
-
 ---
 
-## 🗄️ Database Design
+## 🗄️ Data Model (Planned)
 
-The initial database strategy uses SQLite for simple local development.
+The initial local-development database plan uses SQLite with SQLAlchemy. Potential entities include users, conversations, messages, tasks, projects, notes, documents, research records, planner events, activity history, and user settings.
 
-Planned database entities:
+```mermaid
+flowchart TB
+    user[User]
+    settings[User Settings]
+    task[Tasks]
+    project[Projects]
+    note[Notes]
+    document[Documents]
+    conversation[Conversations]
+    message[Messages]
+    event[Planner Events]
+    history[Activity History]
 
-- Users
-- Conversations
-- Messages
-- Tasks
-- Projects
-- Notes
-- Documents
-- Research Records
-- Planner Events
-- Activity History
-- User Settings
-
-The data layer will use SQLAlchemy to separate database operations from application logic.
-
----
-
-## 🔄 Development Workflow
-
-CognifyOS follows a modular, incremental development approach.
-
-```text
-Planning
-   |
-   v
-Frontend Development
-   |
-   v
-UI & Component Integration
-   |
-   v
-Backend Development
-   |
-   v
-Database Integration
-   |
-   v
-AI Model Integration
-   |
-   v
-API Integration
-   |
-   v
-Testing & Debugging
-   |
-   v
-Security Improvements
-   |
-   v
-Deployment
+    user --> settings
+    user --> task
+    user --> project
+    user --> note
+    user --> document
+    user --> conversation
+    conversation --> message
+    user --> event
+    user --> history
 ```
 
-### Current Development Approach
-
-1. Build and refine the frontend.
-2. Create the FastAPI backend structure.
-3. Configure the Python environment.
-4. Set up the database.
-5. Develop backend API modules.
-6. Integrate Gemini AI.
-7. Implement AI agents and tools.
-8. Connect frontend and backend.
-9. Test application workflows.
-10. Prepare for deployment.
+This is a conceptual relationship map. Exact fields, constraints, and relationships will be decided when the database schema is implemented.
 
 ---
 
-## 💻 Installation & Setup
+## 💻 Installation and Setup
 
 ### Prerequisites
-
-Install the following tools:
 
 - Node.js and npm
 - Python 3.10+
 - Git
-- Visual Studio Code
 
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/CognifyOS.git
-```
+### 1. Clone the repository
 
 ```bash
-cd CognifyOS
+git clone https://github.com/im-vishal-jain/AetherMind.git
+cd AetherMind
 ```
 
-### 2. Frontend Setup
+### 2. Run the frontend
 
 ```bash
 cd frontend
@@ -458,214 +259,129 @@ npm install
 npm run dev
 ```
 
-The Vite development server will display the local frontend URL in the terminal.
+Vite prints the local development URL in the terminal.
 
-### 3. Backend Setup
+### 3. Run the backend
 
-Open a second terminal from the project root.
+In a second terminal, from the repository root:
 
 ```bash
 cd backend
-```
-
-Create a virtual environment:
-
-```bash
 python -m venv venv
 ```
 
-Activate it on Windows CMD:
+Activate the virtual environment:
 
-```cmd
+```bash
+# Windows CMD
 venv\Scripts\activate
+
+# macOS / Linux
+source venv/bin/activate
 ```
 
-Install dependencies:
+Install dependencies and start the API:
 
 ```bash
 pip install -r ../requirements.txt
-```
-
-Start the FastAPI server:
-
-```bash
 uvicorn main:app --reload
 ```
 
-The API documentation will be available at:
+If the backend structure and dependencies are in place, the API documentation is available at `http://127.0.0.1:8000/docs`.
 
-`http://127.0.0.1:8000/docs`
-
-*These commands assume the documented directory structure and dependency file are in place.*
+> These instructions follow the intended layout above. Adjust commands if the current repository structure differs.
 
 ---
 
-## 🔐 Environment Variables
+## 🔐 Environment and Security
 
-Create a `.env` file in the project root.
-
-Example configuration:
+Create a local `.env` file based on `.env.example` (if available). Keep secrets on the backend and out of version control.
 
 ```env
 APP_NAME=CognifyOS
 DEBUG=True
-
 DATABASE_URL=sqlite:///./cognifyos.db
-
 GEMINI_API_KEY=your_gemini_api_key
-
-SECRET_KEY=your_secret_key
+SECRET_KEY=replace_with_a_secure_random_value
 ```
 
-**Security Notice:**
-
-- Never upload `.env` to GitHub.
-- Never expose API keys in frontend code.
-- Keep credentials on the backend.
-- Use strong secret keys.
-- Validate and sanitize user inputs.
-- Apply authentication and authorization before exposing private user data.
+- Never commit `.env` files, API keys, or private user documents.
+- Never put provider credentials in frontend code.
+- Use strong, randomly generated secrets outside local development.
+- Validate input and apply authentication/authorization before exposing private data.
+- Review logging so credentials and sensitive user content are not recorded.
 
 ---
 
 ## 🧪 Testing Strategy
 
-Planned testing areas:
-
-**Frontend Testing**
-- Component rendering
-- Navigation
-- Form validation
-- UI interactions
-- Responsive layouts
-
-**Backend Testing**
-- API endpoint testing
-- Request validation
-- Database operations
-- Authentication
-- Error handling
-
-**AI Testing**
-- Response quality
-- Prompt handling
-- Context management
-- Tool execution
-- Failure and timeout handling
-
-**Integration Testing**
-- Frontend/backend communication
-- Database integration
-- AI API integration
-- Complete user workflows
+- **Frontend:** component rendering, navigation, form validation, interactions, and responsive layouts.
+- **Backend:** request validation, API behavior, database operations, authentication, and error handling.
+- **AI:** response quality, context handling, tool behavior, and timeout/failure handling.
+- **Integration:** frontend/backend communication, persistence, AI provider connectivity, and end-to-end workflows.
 
 ---
 
 ## 🗺️ Roadmap
 
 ### Phase 1 — Frontend
-- [x] Dashboard interface
-- [x] Sidebar navigation
+- [x] Dashboard and sidebar navigation
 - [x] AI Chat interface
-- [x] Task management interface
-- [x] Study Assistant interface
-- [x] Project Assistant interface
-- [x] Documents interface
-- [x] Research interface
-- [x] Notes interface
-- [x] Daily Planner interface
-- [x] History interface
-- [x] Settings interface
+- [x] Tasks, Study Assistant, and Project Assistant interfaces
+- [x] Documents, Research, Notes, and Daily Planner interfaces
+- [x] History and Settings interfaces
 
 ### Phase 2 — Backend Foundation
-- [ ] FastAPI setup
-- [ ] Backend configuration
-- [ ] Database connection
-- [ ] SQLAlchemy models
-- [ ] Pydantic schemas
-- [ ] API architecture
+- [ ] FastAPI setup and configuration
+- [ ] Database connection and SQLAlchemy models
+- [ ] Pydantic schemas and API architecture
 
 ### Phase 3 — AI Integration
 - [ ] Gemini API integration
-- [ ] AI Chat backend
-- [ ] Conversation history
+- [ ] Chat backend and conversation history
 - [ ] Context-aware memory
-- [ ] AI agent architecture
-- [ ] Tool calling
+- [ ] Agent architecture and tool calling
 
 ### Phase 4 — Application Integration
 - [ ] Authentication
-- [ ] Tasks API
-- [ ] Notes API
-- [ ] Projects API
-- [ ] Study API
-- [ ] Documents API
-- [ ] Research API
-- [ ] Planner API
-- [ ] Settings API
+- [ ] Tasks, Notes, Projects, and Study APIs
+- [ ] Documents, Research, Planner, and Settings APIs
 - [ ] Frontend/backend integration
 
 ### Phase 5 — Advanced AI Ecosystem
 - [ ] Multi-agent orchestration
 - [ ] Retrieval-Augmented Generation (RAG)
-- [ ] Document intelligence
-- [ ] Workflow automation
-- [ ] Long-term memory
-- [ ] Personalized AI assistance
+- [ ] Document intelligence and workflow automation
+- [ ] Long-term memory and personalized assistance
 
-### Phase 6 — Production
+### Phase 6 — Production Readiness
 - [ ] Automated testing
 - [ ] Security hardening
 - [ ] Performance optimization
-- [ ] Deployment
-- [ ] Monitoring and logging
+- [ ] Deployment, monitoring, and logging
 
 ---
 
 ## 🔮 Future Scope
 
-CognifyOS is designed to evolve into a more advanced personal AI ecosystem.
-
-Potential future capabilities include:
-
-- Multi-agent AI architecture.
-- Autonomous task execution with user approval.
-- Voice-based AI interaction.
-- Intelligent personal knowledge management.
-- Document-based AI search.
-- Automated research workflows.
-- AI-powered scheduling.
-- External application integrations.
-- Personalized learning recommendations.
-- Cross-module automation.
+Possible future capabilities include voice interaction, personal knowledge search, document Q&A, automated research workflows, AI-assisted scheduling, external application integrations, personalized learning recommendations, and cross-module automation. Any actions that affect user data or external services should be clearly visible and require appropriate user approval.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions, ideas, suggestions, and improvements are welcome.
+Contributions, ideas, and improvements are welcome:
 
 1. Fork the repository.
-2. Create a new feature branch.
-3. Make your changes.
-4. Test your implementation.
-5. Submit a pull request with a clear description.
+2. Create a feature branch.
+3. Make and test your changes.
+4. Open a pull request with a clear description.
 
 ---
 
 ## 📜 License
 
-This project is currently under development.
-
-Choose and add an appropriate open-source license before distributing the project under open-source terms.
-
----
-
-## 👨‍💻 Author
-
-**CognifyOS — Personal AI Ecosystem**
-
-Created as a project to explore modern web development, artificial intelligence, intelligent automation, and productivity systems.
+This project is under development. Add a license file before distributing the project under open-source terms.
 
 ---
 
